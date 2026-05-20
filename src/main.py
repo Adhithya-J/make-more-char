@@ -9,9 +9,8 @@ def main():
     # print(words[:10])
     
     chars = sorted(list(set("".join(words)))) # unique list of chars from names # tokenization
-    stoi = {s: i for i,s in enumerate(chars)} # attaching a id to each character (encoding)
-    stoi['<S>'] = len(stoi)
-    stoi['<E>'] = len(stoi)
+    stoi = {s: i+1 for i,s in enumerate(chars)} # attaching a id to each character (encoding)
+    stoi['.'] = 0
 
     n = len(stoi) # vocab size
     N = torch.zeros((n,n), dtype=torch.int32) # creating a n*n matrix
@@ -20,7 +19,7 @@ def main():
     itos = {i:s for s,i in stoi.items()} # reverse mapping (decoding)
 
     for w in words:
-        chs = ["<S>"] + list(w) + ["<E>"]
+        chs = ["."] + list(w) + ["."]
         for chr1, chr2 in zip(chs, chs[1:]): # how can you iterate when both are of different size? # It stops at the shortest length so <E> from 1st has no pair and not added
             idx1, idx2 = stoi[chr1], stoi[chr2]
             N[idx1, idx2] += 1
@@ -45,7 +44,25 @@ def main():
         # plt.colorbar(im, ax=ax)
         plt.show()
 
-    display_freqmatrix(N, itos=itos)
+    # display_freqmatrix(N, itos=itos)
+    
+    g = torch.Generator().manual_seed(42)
+
+    def sample_from_tensor(t):
+        t = t.float()
+        t /= t.sum() #  actually it would make sense to normalize the vector to avoid recalculations
+        idx = torch.multinomial(t, 1,replacement=False, generator=g)
+        return idx.item()
+    
+    result = ""
+    idx = 0
+    while True:
+        result += itos[idx]
+        idx = sample_from_tensor(N[idx])
+        if idx == 0:
+            break
+        
+    print(result)
     
 if __name__ == "__main__":
     main()

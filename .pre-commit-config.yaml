@@ -1,0 +1,24 @@
+
+repos:
+  # ---------- Secrets: BEFORE COMMIT ----------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        exclude: |
+          (?x)^(
+            data/|
+            .venv/ |
+          )
+        stages: [commit]
+        args: ["--baseline", ".secrets.baseline"]
+
+  # ---------- Ruff: BEFORE PUSH ----------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.8
+    hooks:
+      - id: ruff
+        stages: [push]
+        args: [--fix]
+      - id: ruff-format
+        stages: [push]
